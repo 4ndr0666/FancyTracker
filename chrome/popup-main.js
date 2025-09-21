@@ -563,6 +563,30 @@ class PopupMain {
                 console.log('FancyTracker: Setting syntax highlight checkbox to:', this.storage.syntaxHighlightEnabled);
             }
             
+            // NEW: Set kill switch toggle to current state
+            const killSwitchCheckbox = document.getElementById('kill-switch');
+            if (killSwitchCheckbox) {
+                chrome.storage.local.get('killSwitchEnabled', (result) => {
+                    killSwitchCheckbox.checked = !!result.killSwitchEnabled;
+                    console.log('FancyTracker: Setting kill switch checkbox to:', !!result.killSwitchEnabled);
+                });
+
+                // Listen for changes and send update to the background script
+                killSwitchCheckbox.addEventListener('change', () => {
+                    const isEnabled = killSwitchCheckbox.checked;
+                    chrome.runtime.sendMessage({
+                        action: 'updateKillSwitchState',
+                        enabled: isEnabled
+                    }, (response) => {
+                        if (chrome.runtime.lastError) {
+                            console.error("Kill Switch update failed:", chrome.runtime.lastError.message);
+                        } else {
+                            console.log("Kill Switch state updated to:", isEnabled);
+                        }
+                    });
+                });
+            }
+            
             // Set code display settings
             if (expandThresholdInput) {
                 expandThresholdInput.value = this.storage.expandThreshold;
@@ -595,6 +619,13 @@ class PopupMain {
             // Reset syntax highlight toggle to original state (now defaults to true)
             if (syntaxHighlightToggle) {
                 syntaxHighlightToggle.checked = this.storage.syntaxHighlightEnabled;
+            }
+            // NEW: Reset kill switch toggle to original state
+            const killSwitchCheckbox = document.getElementById('kill-switch');
+            if (killSwitchCheckbox) {
+                chrome.storage.local.get('killSwitchEnabled', (result) => {
+                    killSwitchCheckbox.checked = !!result.killSwitchEnabled;
+                });
             }
             // Reset code display settings
             if (expandThresholdInput) {

@@ -29,6 +29,7 @@ var blockedListeners = [];
 var blockedUrls = [];
 var blockedRegex = [];
 var compiledRegex = []; // Compiled regex patterns for performance
+var killSwitchEnabled = false; // Global kill switch state
 
 // Pre-loading optimization: Keep popup data ready
 var cachedPopupData = {
@@ -152,13 +153,20 @@ function compileRegexPatterns() {
 
 // Load settings from storage
 function loadSettings() {
-    chrome.storage.local.get([STORAGE_KEYS.DEDUPE_ENABLED, STORAGE_KEYS.BLOCKED_LISTENERS, STORAGE_KEYS.BLOCKED_URLS, STORAGE_KEYS.BLOCKED_REGEX], (result) => {
-        dedupeEnabled = result[STORAGE_KEYS.DEDUPE_ENABLED] !== undefined ? result[STORAGE_KEYS.DEDUPE_ENABLED] : true;  // Default: enabled
+    chrome.storage.local.get([
+        STORAGE_KEYS.DEDUPE_ENABLED, 
+        STORAGE_KEYS.BLOCKED_LISTENERS, 
+        STORAGE_KEYS.BLOCKED_URLS, 
+        STORAGE_KEYS.BLOCKED_REGEX,
+        'killSwitchEnabled' // Add this key
+    ], (result) => {
+        dedupeEnabled = result[STORAGE_KEYS.DEDUPE_ENABLED] !== undefined ? result[STORAGE_KEYS.DEDUPE_ENABLED] : true;
         blockedListeners = result[STORAGE_KEYS.BLOCKED_LISTENERS] || [];
         blockedUrls = result[STORAGE_KEYS.BLOCKED_URLS] || [];
         blockedRegex = result[STORAGE_KEYS.BLOCKED_REGEX] || [];
+        killSwitchEnabled = !!result.killSwitchEnabled; // Load the state, default to false
         compileRegexPatterns();
-        console.log('FancyTracker: Loaded settings - dedupe:', dedupeEnabled, 'blocked listeners:', blockedListeners.length, 'blocked URLs:', blockedUrls.length, 'blocked regex:', blockedRegex.length);
+        console.log('FancyTracker: Loaded settings - Dedupe:', dedupeEnabled, 'Blocked Listeners:', blockedListeners.length, 'Blocked URLs:', blockedUrls.length, 'Blocked Regex:', blockedRegex.length, 'Kill Switch:', killSwitchEnabled);
     });
 }
 
@@ -462,6 +470,20 @@ async function clearListeners(tabId) {
 
 chrome.runtime.onMessage.addListener(function(msg, sender, sendResponse) {
     (async () => {
+        if (msg.action === 'getKillSwitchState') {
+            sendResponse({ killSwitchEnabled: killSwitchEnabled });
+            return; // Don't continue processing
+        }
+
+        // Handle kill switch setting update
+        if (msg.action === 'updateKillSwitchState') {
+            killSwitchEnabled = msg.enabled;
+            await chrome.storage.local.set({ 'killSwitchEnabled': killSwitchEnabled });
+            console.log('FancyTracker: Kill Switch state persisted:', killSwitchEnabled);
+            sendResponse({success: true});
+            return;
+        }
+
         // Handle dedupe setting update
         if (msg.action === 'updateDedupeSetting') {
             await persistentState.loadPromise;
