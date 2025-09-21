@@ -1,4 +1,4 @@
-# m3tracker
+# FancyTracker
 
 A Chrome extension for monitoring `postMessage` listeners in web pages.
 
