@@ -1,10 +1,8 @@
-# README.md
+# Red Team Operations Manual
 
-FacnyTracker is a Manifest V3-compatible iteration of the original [postMessage-tracker](https://github.com/fransr/postMessage-tracker) browser extension by [Frans Rosén](https://twitter.com/fransrosen) for monitoring `postMessage` listeners in web pages.
+FancyTracker is a Manifest V3-compatible iteration of the original [postMessage-tracker](https://github.com/fransr/postMessage-tracker) browser extension by [Frans Rosén](https://twitter.com/fransrosen) for monitoring `postMessage` listeners in web pages.
 
 ---
-
-# Red Team Operations Manual
 
 ## 1.0 Threat Briefing
 
