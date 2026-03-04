@@ -2,18 +2,6 @@
 (function() {
     'use strict';
     
-    window.__FANCYTRACKER_KILL_SWITCH_ENABLED__ = false; // Default state
-
-    // Listen for kill switch state from the bridge
-    originalAddEventListener.call(window, 'message', function(event) {
-        if (event.source === window && event.data && event.data.type === 'FANCYTRACKER_KILL_SWITCH_STATE') {
-            window.__FANCYTRACKER_KILL_SWITCH_ENABLED__ = event.data.enabled;
-            if (event.data.enabled) {
-                console.warn('FancyTracker: GLOBAL KILL SWITCH IS ACTIVE. All new postMessage listeners will be blocked.');
-            }
-        }
-    });
-
     var loaded = false;
     var originalFunctionToString = Function.prototype.toString;
     
@@ -343,17 +331,6 @@
     // Main hook - Window.addEventListener
     Window.prototype.addEventListener = function(type, listener, useCapture) {
         if (type == 'message') {
-            // ================== KILL SWITCH LOGIC ==================
-            // This is the highest priority check. If enabled, we nullify the registration.
-            if (window.__FANCYTRACKER_KILL_SWITCH_ENABLED__) {
-                console.error('FancyTracker: BLOCKED addEventListener("message") due to Global Kill Switch.', {
-                    listener: listener.toString(),
-                    location: h()
-                });
-                return; // Silently refuse to add the listener.
-            }
-            // =======================================================
-
             // Skip our own extension listeners
             if (isExtensionListener(listener)) {
                 return originalAddEventListener.apply(this, arguments);

@@ -36,21 +36,5 @@ if (typeof window.FancyTrackerBridgeLoaded === 'undefined') {
         });
         
         console.log('FancyTracker: Bridge initialized');
-
-        // Request the kill switch state from the background script
-        // Note: We're not using sendMessageSafely here because we need the response.
-        if (chrome.runtime && chrome.runtime.id) {
-            chrome.runtime.sendMessage({ action: 'getKillSwitchState' }, function(response) {
-                if (chrome.runtime.lastError) {
-                    console.error("FancyTracker Bridge: Could not get kill switch state.", chrome.runtime.lastError.message);
-                    return;
-                }
-                // Relay the state to the MAIN world
-                window.postMessage({
-                    type: 'FANCYTRACKER_KILL_SWITCH_STATE',
-                    enabled: response.killSwitchEnabled
-                }, '*');
-            });
-        }
     })();
 }
