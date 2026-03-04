@@ -107,4 +107,14 @@ This manual details the current intelligence summary and outlines the primary at
 4.  **Execute Vector 2 (Phase B):** If a candidate is found, construct and launch the `postMessage`-to-CSRF chained exploit.
 5.  **Report Findings:** Document the success or failure of all protocols for strategic review.
 
-Based on original code by [Frans Rosén](https://twitter.com/fransrosen), adapted under the MIT License.
+### Custom Syntax Highlighting
+
+Element Type,Hex Code,Visual Profile,Usage in 4NDR0666OS
+Keywords,#FF00FF,Neon Magenta,"Logic triggers (if, return), Hook definitions"
+Strings,#66FE86,Electric Lime,"Captured URLs, CDN Paths, Mod-Signals"
+Comments,#808080,Battleship Gray,"Forensic notes, TTP explanations"
+Numbers/IDs,#1F51FF,Neon Blue,"Task IDs, Epoch timestamps, Hop counts"
+Functions,#00FFFF,Cyber Cyan,"Hijacked APIs (addEventListener, postMessage)"
+Background,#080808,Abyssal Black,Default UI Surface for all operator dashboards
+
+>Based on original code by [Frans Rosén](https://twitter.com/fransrosen), adapted under the MIT License.
