@@ -1,16 +1,17 @@
-// Storage management for FancyTracker Ω
-class PopupStorage {
-    constructor() {
-        this.snatchedAssets = [];
+// Storage Abstraction for FancyTracker Ω
+const PopupStorage = {
+    get: (keys) => {
+        return new Promise((resolve) => {
+            chrome.storage.local.get(keys, (result) => {
+                resolve(result);
+            });
+        });
+    },
+    clear: () => {
+        return new Promise((resolve) => {
+            chrome.runtime.sendMessage({ action: 'PURGE_STATE' }, (response) => {
+                resolve(response);
+            });
+        });
     }
-
-    async init() {
-        const result = await chrome.storage.local.get(['snatched_assets']);
-        this.snatchedAssets = result.snatched_assets || [];
-    }
-
-    async clearAll() {
-        await chrome.storage.local.clear();
-        this.snatchedAssets = [];
-    }
-}
+};

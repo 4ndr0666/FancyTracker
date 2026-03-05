@@ -1,41 +1,61 @@
-// Main popup script for FancyTracker Ω
-class PopupMain {
-    constructor() {
-        this.storage = new PopupStorage();
-        this.ui = new PopupUI(this.storage);
-        this.currentTab = 'listeners';
-    }
+// Main Controller for FancyTracker Ω Popup
+document.addEventListener('DOMContentLoaded', async () => {
+    let currentTab = 'listeners';
 
-    async init() {
-        await this.storage.init();
-        this.setupTabs();
-        this.refreshData();
-        
-        // Setup real-time updates via Port
-        const port = chrome.runtime.connect({ name: "FancyTracker" });
-        port.onMessage.addListener((msg) => {
-            if (msg.action === 'NEW_ASSET') this.refreshData();
-        });
-    }
+    const refreshData = async () => {
+        chrome.runtime.sendMessage({ action: 'GET_STATE' }, (state) => {
+            if (!state) return;
 
-    setupTabs() {
-        document.getElementById('btn-assets').onclick = () => {
-            this.currentTab = 'assets';
-            this.refreshData();
-        };
-        // Add other tab listeners...
-    }
+            PopupUI.updateStats({
+                intercepts: state.intercepts || [],
+                assets: state.snatchedAssets || []
+            });
 
-    async refreshData() {
-        chrome.runtime.sendMessage({ action: 'GET_DATA' }, (data) => {
-            if (this.currentTab === 'assets') {
-                this.ui.displaySnatched(data.assets);
+            if (currentTab === 'listeners') {
+                PopupUI.render(state.listeners || [], 'listeners');
+            } else if (currentTab === 'intercepts') {
+                PopupUI.render(state.intercepts || [], 'intercepts');
+            } else if (currentTab === 'assets') {
+                PopupUI.render(state.snatchedAssets || [], 'assets');
             }
         });
-    }
-}
+    };
 
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new PopupMain();
-    app.init();
+    // Tab Event Listeners
+    const tabs = {
+        'tab-listeners': 'listeners',
+        'tab-intercepts': 'intercepts',
+        'tab-assets': 'assets'
+    };
+
+    Object.keys(tabs).forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            btn.onclick = () => {
+                currentTab = tabs[id];
+                // Update CSS classes
+                Object.keys(tabs).forEach(k => document.getElementById(k).classList.remove('active'));
+                btn.classList.add('active');
+                refreshData();
+            };
+        }
+    });
+
+    // Purge Logic
+    const purgeBtn = document.getElementById('purge-btn');
+    if (purgeBtn) {
+        purgeBtn.onclick = async () => {
+            if (confirm("Initiate total signal purge?")) {
+                await PopupStorage.clear();
+                refreshData();
+            }
+        };
+    }
+
+    // Polling refresh
+    refreshData();
+    const interval = setInterval(refreshData, 1500);
+
+    // Cleanup on close
+    window.onunload = () => clearInterval(interval);
 });

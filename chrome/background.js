@@ -1,80 +1,64 @@
-// Background script for FancyTracker Ω-ULTIMATE
-// Persists listener data, intercepted signals, and snatched assets.
-const STORAGE_KEYS = {
-    LISTENERS: 'tab_listeners',
-    INTERCEPTS: 'tab_intercepts',
-    SNATCHED: 'snatched_assets',
-    DEDUPE_ENABLED: 'dedupeEnabled',
-    BLOCKED_REGEX: 'blockedRegex'
+// Background Service Worker - FancyTracker Ω-ULTIMATE
+const STATE = {
+    listeners: [],
+    intercepts: [],
+    snatchedAssets: []
 };
 
-var tab_listeners = {};
-var tab_intercepts = {};
-var snatched_assets = [];
-var connectedPorts = [];
+// Persistence Logic
+const saveToStorage = () => {
+    chrome.storage.local.set({
+        'tab_listeners': STATE.listeners,
+        'tab_intercepts': STATE.intercepts,
+        'snatched_assets': STATE.snatchedAssets
+    });
+};
 
 // Initialize State from Storage
-async function loadState() {
-    const result = await chrome.storage.local.get([
-        STORAGE_KEYS.LISTENERS, 
-        STORAGE_KEYS.INTERCEPTS, 
-        STORAGE_KEYS.SNATCHED
-    ]);
-    tab_listeners = result[STORAGE_KEYS.LISTENERS] || {};
-    tab_intercepts = result[STORAGE_KEYS.INTERCEPTS] || {};
-    snatched_assets = result[STORAGE_KEYS.SNATCHED] || [];
-    console.log('FancyTracker: Ω-State Loaded');
-}
+chrome.storage.local.get(['tab_listeners', 'tab_intercepts', 'snatched_assets'], (res) => {
+    STATE.listeners = res.tab_listeners || [];
+    STATE.intercepts = res.tab_intercepts || [];
+    STATE.snatchedAssets = res.snatched_assets || [];
+});
 
-// Save State to Storage
-async function saveState() {
-    await chrome.storage.local.set({
-        [STORAGE_KEYS.LISTENERS]: tab_listeners,
-        [STORAGE_KEYS.INTERCEPTS]: tab_intercepts,
-        [STORAGE_KEYS.SNATCHED]: snatched_assets
-    });
-}
-
-// Handle Messages from Bridge
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    const tabId = sender.tab ? sender.tab.id : (message.tabId || 'global');
+    const tabId = sender.tab ? sender.tab.id : 'popup';
 
     if (message.action === 'LOG_MESSAGE') {
         const detail = message.payload;
+        detail.tabId = tabId;
         if (detail.listener) {
-            if (!tab_listeners[tabId]) tab_listeners[tabId] = [];
-            tab_listeners[tabId].push(detail);
+            STATE.listeners.push(detail);
+            if (STATE.listeners.length > 1000) STATE.listeners.shift();
         } else {
-            if (!tab_intercepts[tabId]) tab_intercepts[tabId] = [];
-            tab_intercepts[tabId].push(detail);
+            STATE.intercepts.push(detail);
+            if (STATE.intercepts.length > 1000) STATE.intercepts.shift();
         }
-        saveState();
+        saveToStorage();
     }
 
     if (message.action === 'ASSET_SNATCHED') {
-        snatched_assets.push({ ts: Date.now(), url: message.url, tabId: tabId });
-        if (snatched_assets.length > 100) snatched_assets.shift();
-        saveState();
-        // Broadcast to popup if open
-        connectedPorts.forEach(port => port.postMessage({ action: 'NEW_ASSET', asset: message.url }));
+        const exists = STATE.snatchedAssets.some(a => a.url === message.url);
+        if (!exists) {
+            STATE.snatchedAssets.push({ ts: Date.now(), url: message.url, tabId: tabId });
+            if (STATE.snatchedAssets.length > 100) STATE.snatchedAssets.shift();
+            saveToStorage();
+        }
     }
 
-    if (message.action === 'GET_DATA') {
-        sendResponse({
-            listeners: tab_listeners[message.tabId] || [],
-            intercepts: tab_intercepts[message.tabId] || [],
-            assets: snatched_assets
+    if (message.action === 'GET_STATE') {
+        sendResponse(STATE);
+    }
+
+    if (message.action === 'PURGE_STATE') {
+        STATE.listeners = [];
+        STATE.intercepts = [];
+        STATE.snatchedAssets = [];
+        chrome.storage.local.clear(() => {
+            saveToStorage();
+            sendResponse({ status: 'purged' });
         });
     }
-    return true;
-});
 
-// Port Communication for Real-time Popup Updates
-chrome.runtime.onConnect.addListener((port) => {
-    connectedPorts.push(port);
-    port.onDisconnect.addListener(() => {
-        connectedPorts = connectedPorts.filter(p => p !== port);
-    });
+    return true; 
 });
-
-loadState();

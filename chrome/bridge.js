@@ -1,23 +1,23 @@
 // Bridge Content Script - Relays MAIN world data to BACKGROUND script
 (function() {
     'use strict';
-    if (window.FancyTrackerBridgeLoaded) return;
-    window.FancyTrackerBridgeLoaded = true;
+    if (window.__FANCY_BRIDGE_LOADED__) return;
+    window.__FANCY_BRIDGE_LOADED__ = true;
 
-    // Inject the main tracker into the document head for MAIN world access
+    // Inject main.js into the MAIN world
     const script = document.createElement('script');
     script.src = chrome.runtime.getURL('main.js');
     (document.head || document.documentElement).appendChild(script);
-    script.onload = function() { this.remove(); };
+    script.onload = () => script.remove();
 
     // Listen for data from the MAIN world (main.js)
-    window.addEventListener('message', function(event) {
+    window.addEventListener('message', (event) => {
         if (event.data && event.data.type === 'POSTMESSAGE_TRACKER_DATA') {
             const detail = event.data.detail;
             
-            // Automatic Asset Snatching (Race-Condition Mitigation)
-            const rawData = JSON.stringify(detail.data || detail.listener || "");
-            if (rawData.includes('.mp4') || rawData.includes('.webm')) {
+            // Heuristic Snatching in the Bridge Layer
+            const rawData = JSON.stringify(detail.data || "");
+            if (rawData.includes('.mp4')) {
                 const urlMatch = rawData.match(/https?:\/\/[^"'\s]+\.(mp4|webm|m3u8)[^"'\s]*/gi);
                 if (urlMatch) {
                     chrome.runtime.sendMessage({
@@ -27,7 +27,6 @@
                 }
             }
 
-            // Standard relay to background
             chrome.runtime.sendMessage({
                 action: 'LOG_MESSAGE',
                 payload: detail

@@ -1,49 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="utf-8">
-	<title>FancyTracker v3.1-Ω</title>
-	<link rel="stylesheet" href="popup.css">
-	<link rel="stylesheet" href="lib/github.css">
-	<script src="lib/highlight.min.js"></script>
-	<script type="text/javascript" src="popup-storage.js"></script>
-	<script type="text/javascript" src="popup-ui.js"></script>
-	<script type="text/javascript" src="popup-main.js"></script>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="popup.css">
 </head>
 <body class="electric-glass">
-	<div class="container">
-		<div class="header">
-			<div class="header-left">
-				<div class="logo">
-					<svg viewBox="0 0 128 128" style="width:16px; height:16px; vertical-align:middle; margin-right:5px;">
-						<path d="M 64,12 A 52,52 0 1 1 63.9,12 Z" stroke="#00E5FF" fill="none" stroke-dasharray="2" stroke-width="2" />
-						<path d="M64 30 L91.3 47 L91.3 81 L64 98 L36.7 81 L36.7 47 Z" stroke="#00E5FF" fill="none" stroke-width="3" />
-						<text x="64" y="67" text-anchor="middle" dominantBaseline="middle" fill="#00E5FF" fontSize="30" fontWeight="700">Ψ</text>
-					</svg>
-					FancyTracker Ω
-				</div>
-				<button class="settings-btn" id="settings-btn" title="Settings">&#9881;</button>
-			</div>
-			<div class="url-display" id="h">Loading...</div>
-		</div>
-		
-		<div class="stats-bar">
-			<div class="listener-count" id="listener-count">0 signals detected</div>
-			<div class="stats-left">
-				<div class="button-group">
-					<button class="tab-btn active" id="btn-listeners">Listeners</button>
-					<button class="tab-btn" id="btn-intercepts">Signals</button>
-					<button class="tab-btn" id="btn-assets" style="color:#FF00FF">Snatched</button>
-				</div>
-				<div class="status-badge" id="status-badge">ARMED</div>
-			</div>
-		</div>
-		
-		<div class="content">
-			<div class="listener-list" id="listener-list">
-				</div>
-		</div>
-	</div>
-
-	</body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Ψ FancyTracker Ω</div>
+            <div id="status-badge" class="badge">ARMED</div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat">Signals: <b id="signal-count">0</b></div>
+            <div class="stat">Assets: <b id="asset-count">0</b></div>
+        </div>
+        <div class="tabs">
+            <button id="tab-listeners" class="tab active">Listeners</button>
+            <button id="tab-intercepts" class="tab">Traffic</button>
+            <button id="tab-assets" class="tab" style="color:#FF00FF">Snatched</button>
+        </div>
+        <div id="viewport" class="content">
+            <div id="list" class="list"></div>
+        </div>
+        <div class="footer">
+            <button id="purge-btn" class="btn-magenta">PURGE DATA</button>
+        </div>
+    </div>
+    <script src="popup-storage.js"></script>
+    <script src="popup-ui.js"></script>
+    <script src="popup-main.js"></script>
+</body>
 </html>
