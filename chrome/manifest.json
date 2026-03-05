@@ -1,44 +1,47 @@
 {
   "manifest_version": 3,
-  "name": "FancyTracker",
-  "description": "PostMessage listener tracker and analyzer",
-  "version": "1.1.0",
-  "author": "Zettergren",
-  "homepage_url": "https://github.com/Zeetaz/FancyTracker",
-  "icons": {
-    "16": "icons/icon-16.png",
-    "32": "icons/icon-32.png", 
-    "48": "icons/icon-48.png",
-    "128": "icons/icon-128.png"
-  },
+  "name": "FancyTracker v3.1-Ω",
+  "version": "3.1.0",
+  "description": "Ω-Level PostMessage & Signal Instrumentation Suite.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["main.js"],
-      "run_at": "document_start",
-      "all_frames": true,
-      "world": "MAIN"
-    },
-    {
-      "matches": ["<all_urls>"],
       "js": ["bridge.js"],
       "run_at": "document_start",
-      "all_frames": true,
-      "world": "ISOLATED"
+      "all_frames": true
     }
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "FancyTracker - PostMessage Tracker"
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
   },
-  "permissions": [
-    "tabs",
-    "storage"
-  ],
-  "host_permissions": [
-    "*://*/*"
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["main.js"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
